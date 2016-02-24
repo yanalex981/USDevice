@@ -4,7 +4,7 @@ class UltrasonicSensor
   int pin;
 
 public:
-  UltrasonicSensor(int pin = 7) :
+  constexpr UltrasonicSensor(int pin = 7) :
     pin(pin)
   {}
 
@@ -28,11 +28,21 @@ public:
   }
 };
 
-UltrasonicSensor us;
+static constexpr int SPEAKER_PIN = 6;
+static constexpr UltrasonicSensor us = 7;
+
+static constexpr double MIN_D = 20.0;
+static constexpr double MAX_D = 400.0;
+
+static constexpr double MIN_FREQ = 500.0;
+static constexpr double MAX_FREQ = 6000.0;
 
 void setup() {}
 
 void loop()
 {
-  //
+  double distance = us.distance();
+  double frequency = map(distance, MIN_D, MAX_D, MIN_FREQ, MAX_FREQ);
+
+  tone(SPEAKER_PIN, frequency);
 }
