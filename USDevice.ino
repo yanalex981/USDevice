@@ -23,6 +23,8 @@ public:
 		pinMode(pin, INPUT);
 		long duration = pulseIn(pin, HIGH);
 		float distance = V_SOUND * duration;
+
+    return distance;
 	}
 };
 
