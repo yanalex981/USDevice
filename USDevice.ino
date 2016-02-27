@@ -16,14 +16,16 @@ public:
     delayMicroseconds(2);
 
     digitalWrite(pin, HIGH);
-    delayMicroseconds(5);
+    delayMicroseconds(12);
 
     digitalWrite(pin, LOW);
 
     pinMode(pin, INPUT);
+    //long duration = pulseIn(pin, HIGH, 11764);
     long duration = pulseIn(pin, HIGH);
-    double distance = V_SOUND * duration;
-    Serial.println(duration);
+    //double distance = V_SOUND * duration;
+    double distance = duration / 29.0 / 2.0;
+    //Serial.println(duration);
     return distance;
   }
 };
@@ -31,19 +33,19 @@ public:
 static constexpr int SPEAKER_PIN = 6;
 static constexpr UltrasonicSensor us = 7;
 
-static constexpr double MIN_D = 20.0;
+static constexpr double MIN_D = 35.0;
 static constexpr double MAX_D = 400.0;
 
 static constexpr double MIN_FREQ = 500.0;
 static constexpr double MAX_FREQ = 6000.0;
 
-static constexpr int MIN_PAUSE = 200;
+static constexpr int MIN_PAUSE = 100;
 static constexpr int MAX_PAUSE = 2000;
 
 static constexpr unsigned long BEEP_TIME = 50;
 
-static int last = 0;
-static int next = 0;
+static unsigned long last = 0;
+static unsigned long next = 0;
 #define DEBUGGING
 void setup()
 {
@@ -56,9 +58,11 @@ void loop()
 {
   //tone(SPEAKER_PIN, 1024, BEEP_TIME);
   double distance = us.distance();
+  if (distance < 0.1)
+    distance = 400;
   double frequency = map(distance, MIN_D, MAX_D, MIN_FREQ, MAX_FREQ);
-  double pause = map(distance, MIN_D, MAX_D, MIN_PAUSE, MAX_PAUSE);
-  int t = millis();
+  unsigned long pause = max(map(distance, MIN_D, MAX_D, MIN_PAUSE, MAX_PAUSE), MIN_PAUSE);
+  unsigned long t = millis();
 
   next = last + pause;
 
@@ -71,8 +75,8 @@ void loop()
 
 #ifdef DEBUGGING
   //Serial.print("L: ");
-  //Serial.print(last);
+  //Serial.println(last);
   //Serial.print("D:");
-  //Serial.println(distance);
+  Serial.println(distance);
 #endif
 }
