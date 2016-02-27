@@ -1,14 +1,12 @@
 class UltrasonicSensor
 {
-  static constexpr double V_SOUND = 340.29 * 100.0 / 1000000.0;
-  int pin;
+  static constexpr unsigned int DELAY = 70;
+  unsigned int pin;
 
-public:
-  constexpr UltrasonicSensor(int pin = 7) :
-    pin(pin)
-  {}
+  unsigned long nextPing;
+  unsigned long prevRead;
 
-  inline double distance() const
+  inline unsigned long ping()
   {
     pinMode(pin, OUTPUT);
 
@@ -22,22 +20,44 @@ public:
 
     pinMode(pin, INPUT);
     //long duration = pulseIn(pin, HIGH, 11764);
-    long duration = pulseIn(pin, HIGH);
-    //double distance = V_SOUND * duration;
-    double distance = duration / 29.0 / 2.0;
-    //Serial.println(duration);
+    unsigned long duration = pulseIn(pin, HIGH);
+
+    return duration;
+  }
+
+public:
+  UltrasonicSensor(unsigned int pin = 7) :
+    pin{pin},
+    nextPing{0},
+    prevRead{0}
+  {
+    distance();
+  }
+
+  inline unsigned long distance()
+  {
+    unsigned long t = millis();
+    
+    if (t < nextPing)
+      return prevRead;
+
+    nextPing = t + DELAY;
+    unsigned long duration = ping();
+    unsigned long distance = duration / 58;
+    prevRead = distance;
+    
     return distance;
   }
 };
 
 static constexpr int SPEAKER_PIN = 6;
-static constexpr UltrasonicSensor us = 7;
+static UltrasonicSensor us = 7;
 
-static constexpr double MIN_D = 35.0;
-static constexpr double MAX_D = 400.0;
+static constexpr unsigned long MIN_D = 10;
+static constexpr unsigned long MAX_D = 400;
 
-static constexpr double MIN_FREQ = 500.0;
-static constexpr double MAX_FREQ = 6000.0;
+static constexpr unsigned long MIN_FREQ = 500;
+static constexpr unsigned long MAX_FREQ = 6000;
 
 static constexpr int MIN_PAUSE = 100;
 static constexpr int MAX_PAUSE = 2000;
@@ -46,7 +66,9 @@ static constexpr unsigned long BEEP_TIME = 50;
 
 static unsigned long last = 0;
 static unsigned long next = 0;
+
 #define DEBUGGING
+
 void setup()
 {
 #ifdef DEBUGGING
@@ -56,12 +78,12 @@ void setup()
 
 void loop()
 {
-  //tone(SPEAKER_PIN, 1024, BEEP_TIME);
-  double distance = us.distance();
+  unsigned long distance = us.distance();
+  
   if (distance < 0.1)
     distance = 400;
-  double frequency = map(distance, MIN_D, MAX_D, MIN_FREQ, MAX_FREQ);
-  unsigned long pause = max(map(distance, MIN_D, MAX_D, MIN_PAUSE, MAX_PAUSE), MIN_PAUSE);
+  //double frequency = map(distance, MIN_D, MAX_D, MIN_FREQ, MAX_FREQ);
+  unsigned long pause = map(distance, MIN_D, MAX_D, MIN_PAUSE, MAX_PAUSE);
   unsigned long t = millis();
 
   next = last + pause;
@@ -70,7 +92,7 @@ void loop()
   {
     last = t;
 
-    //tone(SPEAKER_PIN, 1024, BEEP_TIME);
+    tone(SPEAKER_PIN, 1024, BEEP_TIME);
   }
 
 #ifdef DEBUGGING
